@@ -1,64 +1,35 @@
 # Calendar release · 5 November 2026
 
-| Purpose                      | Hostname                              | Access                                    |
-| ---------------------------- | ------------------------------------- | ----------------------------------------- |
-| Public calendar links        | `https://cl.d.htd.ink/s/{shareToken}` | Public, read-only                         |
-| Private editor and write API | `https://cl-edit.d.htd.ink`           | Cloudflare Access plus private edit token |
+| Purpose              | Hostname                              | Current access                                 |
+| -------------------- | ------------------------------------- | ---------------------------------------------- |
+| Shared calendars     | `https://cl.d.htd.ink/s/{shareToken}` | Read-only; Cloudflare Access required by owner |
+| Editor and write API | `https://cl-edit.d.htd.ink`           | Cloudflare Access plus private edit token      |
 
-The confirmed origins are versioned in `deployment/production.json`. The public bare root serves no editor; share links use `/s/{shareToken}`.
+The owner explicitly chose to retain Access on both hosts and defer live tests on the share host. Shared links currently require an allowed Access identity. The share hostname still cannot edit calendars. The bare share root serves no editor.
 
-## Provisioned
+## Deployed
 
-- Public repository: [chadismoving/mobile-view-share-calendar](https://github.com/chadismoving/mobile-view-share-calendar). The owner confirmed the final name.
-- Production D1 database: `mobile-share-calendar`, provisioned in APAC. Both `0001_initial.sql` and `0002_slot_icons.sql` have been applied. Local test calendars have not been imported.
-- GitHub `production` Environment created. The account ID, D1 ID, and both origins are configured as non-secret repository variables.
-- `PRODUCTION_DEPLOY_ENABLED=false` explicitly prevents Worker deployment while the owner configures Access. PR and main CI checks still run.
-- Credentials, local production settings, generated configs, databases, and builds are ignored by Git. No license has been selected.
+- Source: merged [PR #6](https://github.com/chadismoving/mobile-view-share-calendar/pull/6), main commit `28c2cb5b32e5cdf7ace1d5b65d70646dee936ba7`.
+- Worker: `mobile-share-calendar`, version `c00d1bfa-7bb8-46ba-b572-b71ac5103ce4`, deployed at 02:06 UTC on 5 November 2026 at 100% traffic.
+- Both exact Custom Domains are enabled and have Cloudflare certificate assignments. `workers.dev` and preview URLs remain disabled.
+- Production D1: `mobile-share-calendar` in APAC. All three versioned migrations, including `0003_calendar_banners.sql`, are applied. A private SQL backup was exported before the banner migration. No local test calendars were imported.
+- Uploaded/cropped calendar banners, themed slot icons, calendar editing/sharing/export, and Google Maps integration are included. The existing colors remain unchanged.
+- The supplied Maps browser key is deployed and saved in the GitHub production Environment secret. Editor Access issuer/audience are configured locally and as GitHub variables. Keys and generated configuration remain ignored.
 
-Database connection metadata is in the ignored local `.env.production` and GitHub repository variables. D1 migrations can run independently of Access using `npm run db:production`; this generates the ignored `.wrangler.d1.json` without deploying a Worker. CI still checks that all migrations are applied before any future deployment.
+## Validation
 
-## Complete before publishing the Worker
+[Main CI](https://github.com/chadismoving/mobile-view-share-calendar/actions/runs/41952816061) passed typecheck, lint, all eight focused Workers/D1 tests, frontend and Worker builds, runtime dependency audit, and secret scanning before deployment. PR dependency review also passed. The remote migration gate reported no pending migrations.
 
-1. The owner will configure a self-hosted Access application covering **all paths of `cl-edit.d.htd.ink`**, with an Allow policy for their intended identities and no Bypass policy. Keep **`cl.d.htd.ink` outside Access**, including wildcard Access applications.
-2. Copy the Access team HTTPS origin and the editor application's AUD into GitHub repository variables:
+Cloudflare's deployment API confirmed the version at 100% traffic and both Custom Domains attached to this Worker. An unauthenticated editor write request redirects to Cloudflare Access. Production deployment is recorded in GitHub's `production` environment.
 
-   ```sh
-   gh variable set ACCESS_TEAM_DOMAIN --body 'https://your-team.cloudflareaccess.com' --repo chadismoving/mobile-view-share-calendar
-   gh variable set ACCESS_AUD --body 'your-editor-app-audience' --repo chadismoving/mobile-view-share-calendar
-   ```
+Local browser verification covered banner upload/crop/replacement, persistence, shared rendering, PNG export, and phone Schedule/Map views without horizontal overflow at 320, 375, and 430 px. The updated Google key still rejects localhost with `RefererNotAllowedMapError`; live map pins have not been verified. Live shared-calendar tests were deferred at the owner's request. Authenticated production editing, map pins, and physical iOS/Android export behavior remain unverified.
 
-3. Create a narrowly scoped Cloudflare deployment API token for the Worker/account and required zone resources, with D1 read access for the migration gate. Store it as the **production Environment** secret, through GitHub's secure prompt:
+## Future releases
 
-   ```sh
-   gh secret set CLOUDFLARE_API_TOKEN --env production --repo chadismoving/mobile-view-share-calendar
-   ```
+Automatic GitHub deployment remains disabled with `PRODUCTION_DEPLOY_ENABLED=false`. A scoped `CLOUDFLARE_API_TOKEN` is still needed in the GitHub production Environment; local Wrangler OAuth credentials were not uploaded. The initial release used the existing local Cloudflare authentication after main CI passed.
 
-   The local Wrangler OAuth credential has not been copied into GitHub. Keep credentials out of source and chat.
+To enable automatic releases, configure that scoped token, then set `PRODUCTION_DEPLOY_ENABLED=true`. The workflow deploys verified main only, after checks, secret scanning, and the remote migration gate. It does not apply migrations. See README for required permissions and configuration.
 
-4. Review the exact hostnames, Access coverage, and any conflicting DNS records. The eventual Worker deployment attaches the two exact Custom Domains and Cloudflare provisions their DNS/TLS. `workers.dev` and preview URLs remain disabled. No Worker or DNS records have been deployed in this provisioning step.
-5. Once the Access policy and credentials are ready, enable the release gate and run CI on main:
+For schema changes, export a private D1 backup and apply reviewed migrations before deploying compatible code. For a manual release, use the validated ignored production configuration with `npm run deploy`. Local `.dev.vars` is for development; production settings must be supplied separately. Never commit keys, backups, generated configuration, or local databases.
 
-   ```sh
-   gh variable set PRODUCTION_DEPLOY_ENABLED --body true --repo chadismoving/mobile-view-share-calendar
-   gh workflow run ci.yml --ref main --repo chadismoving/mobile-view-share-calendar
-   ```
-
-   Deployment runs only after typecheck, lint, focused tests, frontend/Worker builds, dependency audit, secret scanning, and the remote migration gate pass. Future successful pushes to `main` deploy while this gate is enabled. PRs never deploy to production. Set the variable back to `false` to hold future deployments.
-
-## Validation and launch
-
-Local checks already passed: typecheck, lint, six focused Workers/D1 tests, frontend build, Worker dry run, domain/staging/fail-closed configuration checks, production dependency audit, and staged-source Gitleaks scan. Check the repository's [Actions runs](https://github.com/chadismoving/mobile-view-share-calendar/actions) for current hosted CI results. The first remote push is verified as part of repository publication; local passes do not establish production availability.
-
-After the first Worker deployment:
-
-- Open the editor and write APIs without an Access session, even with a valid edit link: Access must challenge or the Worker must deny access.
-- Open a real `cl.d.htd.ink/s/...` link in an incognito browser: calendar and exports must work without Access, with no editing controls. Editing and writes must fail on that hostname.
-- Create a fresh production calendar, edit, reorder, refresh, rotate the share link, and verify that the previous link is revoked.
-- Export short and long calendars on iOS Safari and Android, reviewing every PNG and file-share/save behavior.
-- Verify both certificates, the deployed commit, and GitHub's deployment record.
-
-The production database starts empty. Local edit/share URLs address local D1 data and do not automatically become production URLs. For later schema changes, take a secure D1 backup and review compatibility before migration. See README for database backups, Time Travel, and code rollback.
-
-## Map/banner update
-
-Before deploying the map/banner version, back up production D1 and apply `0003_calendar_banners.sql` with `npm run db:production`. This migration has been applied to local D1 only during feature verification; the previously provisioned production schema has not been changed for this update. Set the optional production Environment secret `GOOGLE_MAPS_BROWSER_KEY` and repository variable `GOOGLE_MAPS_MAP_ID` as described in README. The local key observed during verification currently rejects localhost with `RefererNotAllowedMapError`; allow the development referrers or verify on the configured production hosts before calling live pins tested. Worker deployment remains controlled by the existing Access prerequisite and deployment gate.
+The current source is the first Worker version, so there is no earlier application version to roll back to. Future compatible application rollbacks can use `npx wrangler rollback --config .wrangler.production.json`; schema recovery is separate. See README for D1 Time Travel and backup recovery.
