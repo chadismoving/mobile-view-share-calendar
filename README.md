@@ -70,11 +70,11 @@ Maps requests use an origin-only referrer so edit-token paths are not sent as re
 
 Configure these in **your Cloudflare account**, outside this repository, before deploying:
 
-1. Use the confirmed hostnames in `deployment/production.json`: **`cl.d.htd.ink` for public links** and **`cl-edit.d.htd.ink` for the private editor**. Both belong to the `htd.ink` Cloudflare zone. Use a dedicated D1 database for production.
+1. Use the confirmed hostnames in `deployment/production.json`: **`cl.d.htd.ink` for share links** and **`cl-edit.d.htd.ink` for the private editor**. Both are attached in the `d.htd.ink` Cloudflare zone. Use a dedicated D1 database for production.
 2. Create a Cloudflare Zero Trust **self-hosted Access application covering the entire editor hostname**, `cl-edit.d.htd.ink`, with no path restrictions. Use an Allow policy for your authorized identities. Do not add a Bypass policy. Copy its Application Audience (AUD) and team domain (`https://your-team.cloudflareaccess.com`). The Worker independently verifies the JWT signature, issuer, audience, and expiration using the team’s public keys; trusting the header alone is insufficient. See [Cloudflare JWT validation](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/).
-3. Keep `cl.d.htd.ink` **outside every Access application**. Do not rely on path exclusions on the editor hostname. The Worker allows only public share pages, share GET APIs, assets, and robots.txt on that hostname; write and editor paths are rejected there.
+3. The owner currently keeps `cl.d.htd.ink` behind Access too. Recipients therefore need an allowed Access identity as well as the share link. For anonymous sharing later, the owner can remove Access coverage from this hostname while retaining it on the editor. The Worker allows only share pages, share GET APIs, assets, and robots.txt on the share hostname; write and editor paths are rejected there.
 4. The generated deployment config attaches **both exact custom domains** to the same Worker, allowing Cloudflare to provision their DNS/TLS. Resolve existing conflicting DNS records before deployment. The editor hostname’s Access policy must already exist. `workers.dev` and version preview URLs are disabled, and the Worker rejects unknown hostnames. Static assets are routed through the Worker first, so an asset fallback cannot bypass protected HTML/API handling. See [Workers static asset routing](https://developers.cloudflare.com/workers/static-assets/binding/).
-5. Keep request URL logging, third-party analytics, and error trackers off for token-bearing routes. The app sets `no-store`, `no-referrer`, `noindex`, a restrictive CSP, and frame protections. The Worker’s error log intentionally omits URLs and exception contents. Review Cloudflare account-level HTTP logs/retention too: tokens in link paths can appear in infrastructure logs. Robots directives prevent cooperative indexing; they are not authentication.
+5. Keep request URL logging, third-party analytics, and error trackers off for token-bearing routes. The app sets `no-store`, an origin-only referrer policy, `noindex`, a restrictive CSP, and frame protections. The Worker’s error log intentionally omits URLs and exception contents. Review Cloudflare account-level HTTP logs/retention too: tokens in link paths can appear in infrastructure logs. Robots directives prevent cooperative indexing; they are not authentication.
 
 The production D1 database already exists. For a fresh account or staging setup, create a separate database; for this production release, reuse its existing UUID. Export the public configuration values in your local shell (copy placeholders from `.env.example`; npm does **not** load that file automatically):
 
@@ -97,7 +97,7 @@ npm run db:production
 npm run deploy
 ```
 
-These commands perform real remote mutations: run only after checking the account, Access, routes, and database. No live resources are created by installing or building this project. Rate limit bindings allow 60 public API reads/minute/IP and 10 calendar creations/minute/IP (Cloudflare’s distributed limits are approximate). Access protects creation, even though sharing is public. Additional zone WAF/rate-limit policies can be configured externally.
+These commands perform real remote mutations: run only after checking the account, Access, routes, and database. No live resources are created by installing or building this project. Rate limit bindings allow 60 share API reads/minute/IP and 10 calendar creations/minute/IP (Cloudflare’s distributed limits are approximate). Access protects creation; the current owner-managed Access setup also protects shared calendars. Additional zone WAF/rate-limit policies can be configured externally.
 
 ### Database migrations, backups, and rollback
 
@@ -118,11 +118,11 @@ Rollback application code with `npx wrangler rollback --config .wrangler.product
 
 The public repository is [chadismoving/mobile-view-share-calendar](https://github.com/chadismoving/mobile-view-share-calendar), confirmed and created on 5 November 2026. No license has been selected or added.
 
-Production D1 `mobile-share-calendar` has been provisioned in APAC with both schema migrations applied. Its ID is stored in GitHub repository variables and the ignored local `.env.production`; no local test schedules were imported. For an existing database, inspect the migrations before applying additional changes. `npm run db:production` generates a D1-only config and does not require Access values or deploy a Worker.
+Production D1 `mobile-share-calendar` has been provisioned in APAC with all three schema migrations applied. Its ID is stored in GitHub repository variables and the ignored local `.env.production`; no local test schedules were imported. For an existing database, inspect the migrations before applying additional changes. `npm run db:production` generates a D1-only config and does not require Access values or deploy a Worker.
 
-Worker deployment is disabled by the repository variable `PRODUCTION_DEPLOY_ENABLED=false` while the owner sets up Access. CI and secret scanning still run. After Access and deployment credentials are configured, set this variable to `true` and either push to `main` or manually run the CI workflow on `main`.
+The first production Worker was deployed locally on 5 November 2026 from verified main commit `28c2cb5`; see [SHIP.md](SHIP.md) for its version and validation limits. Automatic GitHub deployment remains disabled by `PRODUCTION_DEPLOY_ENABLED=false` because a scoped `CLOUDFLARE_API_TOKEN` has not been configured. CI and secret scanning still run. After that production Environment secret is configured, set the variable to `true` and either push to `main` or manually run the CI workflow on `main`.
 
-A GitHub **production** Environment and the D1/account/domain repository variables have been created. Finish the Access/deployment settings below:
+A GitHub **production** Environment, the D1/account/domain and editor Access variables, and the Maps browser-key secret are configured. The local Wrangler OAuth token has not been copied to GitHub. Configure the scoped deployment token below to enable automatic releases:
 
 | Kind                | Name                    | Value                                                                                                                     |
 | ------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------- |
@@ -151,7 +151,7 @@ Preview deployments are intentionally not created for untrusted PRs. For staging
 Automated checks exercise the real local Workers runtime and D1, but cannot verify your external Access policy, DNS, or GitHub environment. After configuring/deploying, manually verify:
 
 - Open editor and write APIs unauthenticated: Access challenges or Worker 401/403, even with a valid edit link. Public share hostname rejects editor/write routes; alternative Worker hostnames cannot bypass Access.
-- Open a share link in an incognito session: view details and export, with no editing or Access challenge. Replace the link; the old one returns unavailable.
+- Open a share link with an allowed Access identity: view details and export, with no editing controls. Replace the link; the old one returns unavailable. Anonymous sharing is only expected if the owner later removes Access from the share host.
 - On 320, 375, and 430 px viewports: create two dates and several slots including 3:00–5:00 PM; edit, drag within/across dates, use keyboard/move controls, refresh, and confirm persistence and no horizontal scrolling.
 - Try offline editing/reconnect, concurrent tabs, and an expired Access session. Confirm drafts remain recoverable.
 - On actual iOS Safari and Android: export short and long schedules, review **every** PNG, and try native file share/download/save. Device canvas memory and native share behavior need physical-device checks.
