@@ -14,6 +14,11 @@ import {
 import { formatDate, type CalendarContent } from "../../shared/calendar";
 import { api } from "../lib/api";
 import { loadGoogleMaps, type MapsConfig } from "../lib/google-maps";
+import {
+  geocodingProblem,
+  mapProblemMessage,
+  type MapProblem,
+} from "../lib/map-errors";
 const pinColors = {
   sage: "#d6e2c9",
   lavender: "#ded6ed",
@@ -41,6 +46,7 @@ export function CalendarMap({
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [unresolved, setUnresolved] = useState<string[]>([]);
+  const [pinnedKeys, setPinnedKeys] = useState<string[]>([]);
   const host = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markerRefs = useRef(
@@ -67,10 +73,14 @@ export function CalendarMap({
   useEffect(() => {
     if (!requested || !config?.googleMapsKey || !places.length) return;
     let cancelled = false;
+    let sdkFailed = false;
     const markers: google.maps.marker.AdvancedMarkerElement[] = [];
     const markerIndex = markerRefs.current;
     const showError = () => {
+      sdkFailed = true;
       setStatus("");
+      setUnresolved([]);
+      setPinnedKeys([]);
       setError(
         "The map is unavailable right now. You can still open each location in Google Maps below.",
       );
@@ -80,6 +90,7 @@ export function CalendarMap({
       setError("");
       setStatus("Finding your places…");
       setUnresolved([]);
+      setPinnedKeys([]);
       const sdk = await loadGoogleMaps(config!.googleMapsKey!);
       if (cancelled || !host.current) return;
       const map = new sdk.Map(host.current, {
@@ -97,13 +108,15 @@ export function CalendarMap({
       const geocoder = new sdk.Geocoder();
       const bounds = new sdk.LatLngBounds();
       const missing: string[] = [];
+      let problem: Exclude<MapProblem, "not-found"> | null = null;
       let resolved = 0;
       // Geocode unique addresses only, in small batches. Results stay in this view,
       // never in D1 or localStorage; only the user's own location text is persisted.
       for (let start = 0; start < places.length; start += 3) {
-        if (cancelled) break;
+        if (cancelled || sdkFailed) break;
         await Promise.all(
           places.slice(start, start + 3).map(async (place) => {
+            let stage: "lookup" | "marker" = "lookup";
             try {
               let position = geocodeCache.current.get(place.key);
               if (!position) {
@@ -114,11 +127,12 @@ export function CalendarMap({
                 if (position && !cancelled)
                   geocodeCache.current.set(place.key, position);
               }
-              if (cancelled) return;
+              if (cancelled || sdkFailed) return;
               if (!position) {
                 missing.push(place.address);
                 return;
               }
+              stage = "marker";
               const pin = new sdk.marker.PinElement({
                 background: pinColors[place.color],
                 borderColor: "#58694f",
@@ -126,7 +140,6 @@ export function CalendarMap({
                 glyphText: String(place.number),
               });
               const marker = new sdk.marker.AdvancedMarkerElement({
-                map,
                 position,
                 title: place.address,
                 gmpClickable: true,
@@ -152,24 +165,41 @@ export function CalendarMap({
                 info.setContent(panel);
                 info.open({ map, anchor: marker });
               });
+              marker.map = map;
               markers.push(marker);
               markerIndex.set(place.key, marker);
               bounds.extend(position);
               resolved++;
-            } catch {
-              if (!cancelled) missing.push(place.address);
+            } catch (caught) {
+              if (cancelled || sdkFailed) return;
+              const issue =
+                stage === "lookup" ? geocodingProblem(caught) : "marker";
+              if (issue === "not-found") missing.push(place.address);
+              else problem ??= issue;
             }
           }),
         );
-        if (cancelled) break;
+        if (cancelled || sdkFailed) break;
         if (resolved) {
           map.fitBounds(bounds, 36);
           if (resolved === 1) map.setZoom(14);
         }
         setStatus(`Pinned ${resolved} of ${places.length} locations`);
         setUnresolved([...missing]);
+        setPinnedKeys([...markerIndex.keys()]);
+        // Project-wide denials/limits cannot be fixed by querying more addresses.
+        if (
+          problem === "billing" ||
+          problem === "denied" ||
+          problem === "quota"
+        )
+          break;
       }
-      if (!cancelled && !resolved)
+      if (cancelled || sdkFailed) return;
+      if (problem) {
+        if (!resolved) setStatus("");
+        setError(mapProblemMessage[problem]);
+      } else if (!resolved)
         setError(
           "We couldn’t pin these places. Add a complete address to each slot and try again.",
         );
@@ -299,7 +329,7 @@ export function CalendarMap({
             <button
               className="place-focus"
               onClick={() => focusPlace(place.key)}
-              disabled={!requested || !config?.googleMapsKey || Boolean(error)}
+              disabled={!pinnedKeys.includes(place.key)}
             >
               <span className={`place-number color-${place.color}`}>
                 {place.number}

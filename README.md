@@ -70,6 +70,8 @@ To enable the map:
 4. Optionally set `GOOGLE_MAPS_MAP_ID` in `.dev.vars` and the matching GitHub repository variable to use your own JavaScript map ID/style. The initial setup uses Google's `DEMO_MAP_ID`; create your own map ID for production configuration.
 5. Verify marker positions, map controls, and attribution on the actual allowed hosts. `RefererNotAllowedMapError` means the page's origin needs to be allowed in the key settings. Without a configured/working key, locations remain saved and can be opened individually.
 
+If the base map loads but location pins fail with `REQUEST_DENIED`, check billing on the project associated with the browser key, enable the Geocoding API in that same project, and check the key's API/website restrictions. The base map and address lookups are separate services. Only `ZERO_RESULTS` indicates that Google could not find an address; denied requests, quota/network failures, and marker-rendering failures are displayed separately. Retry after correcting the project configuration.
+
 Maps requests use an origin-only referrer so edit-token paths are not sent as referrers. Google's SDK resource/CSP permissions are enabled only when a Maps key is configured; map initialization uses the documented Google allowlist, including the SDK's evaluation requirement. Sources: [Google Maps CSP guide](https://developers.google.com/maps/documentation/javascript/content-security-policy), [advanced markers](https://developers.google.com/maps/documentation/javascript/advanced-markers/start), and [API-key restrictions](https://developers.google.com/maps/api-security-best-practices).
 
 ## Production prerequisites: Access and separate hostnames
