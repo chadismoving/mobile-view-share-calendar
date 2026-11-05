@@ -9,6 +9,7 @@ import {
   type Slot,
 } from "../../shared/calendar";
 import { SlotContent } from "../components/SlotCard";
+import { createExportFontEmbedder } from "./export-fonts";
 
 type Segment = { day: Day; slots: Slot[]; continued: boolean };
 export type ExportedImage = { url: string; filename: string; file: File };
@@ -130,6 +131,8 @@ export async function exportImages(
       ),
     );
     await frame();
+    // Export-only text can need CJK subsets that the screen has not loaded yet.
+    await document.fonts.ready;
     if (bannerSrc) {
       const image = host.querySelector<HTMLImageElement>(".export-banner");
       if (image)
@@ -190,6 +193,7 @@ export async function exportImages(
         add({ day: segment.day, slots: group, continued }, groupHeight);
     });
     const { toBlob } = await import("html-to-image");
+    const embedFonts = createExportFontEmbedder();
     const name =
       content.title
         .normalize("NFKD")
@@ -211,6 +215,7 @@ export async function exportImages(
         ),
       );
       await frame();
+      await document.fonts.ready;
       const banner = host.querySelector<HTMLImageElement>(".export-banner");
       if (banner) await banner.decode();
       const node = host.querySelector<HTMLElement>(".export-page")!;
@@ -224,7 +229,7 @@ export async function exportImages(
         pixelRatio: 2,
         backgroundColor: "#f8f5ef",
         cacheBust: false,
-        skipFonts: true,
+        fontEmbedCSS: await embedFonts(node),
       });
       if (!blob)
         throw new Error(

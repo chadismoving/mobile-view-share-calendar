@@ -1,12 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  font-family:
-    ui-sans-serif,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  --font-sans:
+    "Noto Sans TC Variable", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --font-title: "Noto Serif TC Variable", Georgia, "Times New Roman", serif;
+  font-family: var(--font-sans);
   color: #2c4138;
   background: #f8f5ef;
   font-synthesis: none;
@@ -17,7 +15,7 @@
   --green: #365b49;
   --border: #e7e5dc;
   --paper: #fffefa;
-  --font-serif: Georgia, "Times New Roman", serif;
+  --font-serif: Georgia, "Times New Roman", var(--font-sans);
 }
 * {
   box-sizing: border-box;
@@ -613,10 +611,10 @@ button:active:not(:disabled) {
 }
 .calendar-title-area h1,
 .title-input {
-  font-family: var(--font-serif);
+  font-family: var(--font-title);
   font-size: 42px;
   line-height: 1.2;
-  letter-spacing: -1.4px;
+  letter-spacing: -0.02em;
   font-weight: 400;
   color: #344d3d;
   overflow-wrap: anywhere;
@@ -902,7 +900,7 @@ button:active:not(:disabled) {
 .detail-card h3,
 .export-slot h3 {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -1433,12 +1431,7 @@ button:active:not(:disabled) {
   background: #f8f5ef;
   padding: 27px 24px 21px;
   color: #344b3b;
-  font-family:
-    ui-sans-serif,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  font-family: var(--font-sans);
 }
 .export-brand {
   display: flex;
@@ -1459,11 +1452,11 @@ button:active:not(:disabled) {
   color: #8c977c;
 }
 .export-header > h1 {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-title);
   font-size: 34px;
   line-height: 1.15;
   font-weight: 400;
-  letter-spacing: -1px;
+  letter-spacing: -0.02em;
   margin: 12px 0;
   overflow-wrap: anywhere;
 }
@@ -1548,7 +1541,7 @@ button:active:not(:disabled) {
   word-break: break-all;
 }
 .export-empty {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-serif);
   font-style: italic;
   color: #9da48b;
   font-size: 13px;
@@ -1764,7 +1757,6 @@ button:active:not(:disabled) {
   .calendar-title-area h1,
   .title-input {
     font-size: 34px;
-    letter-spacing: -0.9px;
   }
   .calendar-title-row {
     gap: 10px;
@@ -2535,7 +2527,7 @@ button:active:not(:disabled) {
   padding: 4px 2px;
   color: #4d6148;
   max-width: 230px;
-  font-family: ui-sans-serif, sans-serif;
+  font-family: var(--font-sans);
 }
 .map-info strong {
   font-size: 13px;

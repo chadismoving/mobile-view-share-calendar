@@ -39,6 +39,12 @@ This runs typecheck, lint, focused Workers/D1 tests, the frontend production bui
 
 See [SHIP.md](SHIP.md) for the current release preparation and remaining launch steps.
 
+## Traditional Chinese typography
+
+The interface, activity cards, map place labels, and PNG body text use **Noto Sans TC**. Calendar titles use **Noto Serif TC**, with regular titles and medium activity headings. The fonts are self-hosted from pinned Fontsource variable-font packages; Unicode subsets load as needed, without a Google Fonts request. The existing cream, sage, and pastel colors are unchanged.
+
+PNG export waits for fonts before measuring layout and embeds the subsets needed by each page. Font downloads are reused within a multi-image export, so saved images preserve the Chinese typography without embedding both complete CJK families. The original SIL Open Font Licenses are distributed in `public/assets/fonts/`.
+
 ## Banners and Google Maps
 
 Upload a JPG, PNG, or WebP cover from the editor's **Add banner** action. The crop preview supports vertical positioning for taller photos. Images are re-encoded to a 1600 × 600 JPEG, with a 750 KB upload cap; input files are limited to 15 MB and 40 megapixels. Cropping strips the original image metadata. Change/remove actions are editor-only. The same banner appears on the public view and in each exported PNG.
