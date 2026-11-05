@@ -35,9 +35,36 @@ This runs typecheck, lint, focused Workers/D1 tests, the frontend production bui
 - Revision checks prevent silent overwrites. On conflict, keep the saved version or explicitly replace it with your draft. Export can include the visible draft; sharing requires successful saving.
 - Share links use `/s/{token}` on the **public share hostname**. Anyone with the link can read and export. Replacing the link immediately revokes the previous token for future requests, but cannot revoke downloaded images, already-open pages, or copies someone made.
 - PNG export lazy-loads the image library and captures a dedicated 390 CSS px layout at 2× density (780 px wide). All text, dates, cards, and links are included. Pages are conservatively capped around 2,800 CSS px tall for mobile canvas memory. Dates stay together when possible; oversized dates repeat their date heading with “continued.” Sequential filenames preserve order. An exceptionally tall single slot reports a clear error instead of silently truncating it. No edit tokens, URLs, buttons, or drag handles enter the image layout.
-- Native file sharing appears only when supported. Otherwise use the PNG download links or touch and hold the previews to save on iOS. No external fonts, images, analytics, or CORS-dependent export assets.
+- Native file sharing appears only when supported. Otherwise use the PNG download links or touch and hold the previews to save on iOS. Banner images are served from the same origin for reliable export. The interactive Google Map is a web feature and is not captured into PNGs; all location text remains included.
 
 See [SHIP.md](SHIP.md) for the current release preparation and remaining launch steps.
+
+## Banners and Google Maps
+
+Upload a JPG, PNG, or WebP cover from the editor's **Add banner** action. The crop preview supports vertical positioning for taller photos. Images are re-encoded to a 1600 × 600 JPEG, with a 750 KB upload cap; input files are limited to 15 MB and 40 megapixels. Cropping strips the original image metadata. Change/remove actions are editor-only. The same banner appears on the public view and in each exported PNG.
+
+Apply migration `0003_calendar_banners.sql` before deploying this version. It adds an optional banner reference and a separate image table; existing calendars remain intact. Images stay private until the banner selection is autosaved. Public image access requires the current share link and currently selected banner, so removing a banner or replacing a share link revokes those public image URLs. Earlier uploads remain in D1 as private image versions; account for image storage when planning retention/cleanup. No R2 bucket or separate image service is required.
+
+The desktop layout shows the timeline beside **Map & places**. On phones, switch between **Schedule** and **Map**. Every non-empty location is listed; repeated addresses share one numbered pin while retaining all associated stops. Use complete addresses when adding slots. The Google SDK loads only after **Load Google Map** is clicked. Address lookup results stay in the current view's memory and are never stored in D1 or localStorage. Unresolved locations stay in the list with a direct Google Maps link.
+
+To enable the map:
+
+1. In your Google Cloud project, enable **Maps JavaScript API** and **Geocoding API**, with billing configured for that project.
+2. Create a browser key restricted to those APIs and these website referrers as appropriate:
+
+   ```text
+   https://cl.d.htd.ink/*
+   https://cl-edit.d.htd.ink/*
+   http://localhost:8787/*
+   http://127.0.0.1:8787/*
+   http://127.0.0.1:5173/*
+   ```
+
+3. Put `GOOGLE_MAPS_BROWSER_KEY=...` in the ignored `.dev.vars` for development, then restart Wrangler and reload the page. For GitHub deployment, set `GOOGLE_MAPS_BROWSER_KEY` as a **production Environment secret**. This is a browser key: the app intentionally exposes it via `/api/config`, so website and API restrictions are required; do not reuse a server/admin key.
+4. Optionally set `GOOGLE_MAPS_MAP_ID` in `.dev.vars` and the matching GitHub repository variable to use your own JavaScript map ID/style. The initial setup uses Google's `DEMO_MAP_ID`; create your own map ID for production configuration.
+5. Verify marker positions, map controls, and attribution on the actual allowed hosts. `RefererNotAllowedMapError` means the page's origin needs to be allowed in the key settings. Without a configured/working key, locations remain saved and can be opened individually.
+
+Maps requests use an origin-only referrer so edit-token paths are not sent as referrers. Google's SDK resource/CSP permissions are enabled only when a Maps key is configured; map initialization uses the documented Google allowlist, including the SDK's evaluation requirement. Sources: [Google Maps CSP guide](https://developers.google.com/maps/documentation/javascript/content-security-policy), [advanced markers](https://developers.google.com/maps/documentation/javascript/advanced-markers/start), and [API-key restrictions](https://developers.google.com/maps/api-security-best-practices).
 
 ## Production prerequisites: Access and separate hostnames
 
@@ -83,7 +110,7 @@ npx wrangler d1 export DB --remote --config .wrangler.production.json --output /
 npx wrangler d1 migrations list DB --remote --config .wrangler.production.json
 ```
 
-Review SQL for destructive changes, test against a separate staging D1, and apply with `npm run db:production`. CD deliberately **does not apply migrations**: it queries `d1_migrations`, compares it to the versioned migration files, and fails if any are pending. Before deployment, the operator must apply all migrations, including `0001_initial.sql` and the additive `0002_slot_icons.sql`. Later migrations should be additive and backward-compatible so the currently deployed Worker stays operational while migrations run.
+Review SQL for destructive changes, test against a separate staging D1, and apply with `npm run db:production`. CD deliberately **does not apply migrations**: it queries `d1_migrations`, compares it to the versioned migration files, and fails if any are pending. Before deployment, the operator must apply all migrations, including `0001_initial.sql` and `0002_slot_icons.sql`, and `0003_calendar_banners.sql`. Later migrations should be additive and backward-compatible so the currently deployed Worker stays operational while migrations run.
 
 Rollback application code with `npx wrangler rollback --config .wrangler.production.json` after confirming the target version is compatible with the database. Schema changes are not automatically reversed by a code rollback. For data recovery, use [D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/) or a verified secure export, coordinating writes and the application version before restoration. A database restore can also restore old share links, so rotate affected links afterwards. Keep production data and backups out of Git and Actions artifacts.
 

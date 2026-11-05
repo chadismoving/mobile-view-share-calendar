@@ -2215,3 +2215,431 @@ button:active:not(:disabled) {
 .calendar-title-row {
   margin-top: 0;
 }
+
+/* Cover image and places layout, using the existing warm/pastel palette. */
+.calendar-page {
+  max-width: 1040px;
+  padding-bottom: 32px;
+}
+.calendar-banner-area {
+  margin-bottom: 28px;
+}
+.calendar-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid #e2e5d7;
+  background: #edf0e3;
+}
+.calendar-banner.has-banner {
+  aspect-ratio: 8 / 3;
+  box-shadow: 0 5px 20px #46563f08;
+}
+.calendar-banner > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.banner-empty {
+  display: flex;
+  min-height: 142px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  padding: 20px;
+  color: #879477;
+  font-size: 12px;
+  background:
+    radial-gradient(ellipse at 10% 100%, #dde5ca 0%, transparent 55%),
+    radial-gradient(ellipse at 95% 0%, #eee4cb 0%, transparent 60%), #f1f2e8;
+}
+.banner-empty > svg {
+  color: #8b9d74;
+}
+.banner-controls {
+  position: absolute;
+  right: 15px;
+  bottom: 15px;
+  display: flex;
+  gap: 7px;
+}
+.banner-controls .button {
+  background: #fffefaf2;
+  border-color: #fffefa88;
+  color: #4d6348;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px #22371c12;
+}
+.banner-crop-preview {
+  width: 100%;
+  aspect-ratio: 8 / 3;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #e8ecde;
+  border: 1px solid #dce2cf;
+}
+.banner-crop-preview img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.banner-focus {
+  margin-top: 20px;
+}
+.banner-focus input[type="range"] {
+  accent-color: #6d855b;
+  padding: 0;
+  min-height: 44px;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+.banner-focus > span {
+  color: #939b86;
+  font-size: 10px;
+  font-weight: 400;
+}
+.banner-file-note {
+  margin-top: 14px;
+  color: #8e9780;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.calendar-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 334px;
+  gap: 32px;
+  align-items: start;
+}
+.schedule-column,
+.map-column {
+  min-width: 0;
+}
+.map-column {
+  position: sticky;
+  top: 24px;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  border-radius: 18px;
+}
+.calendar-view-tabs {
+  display: none;
+}
+.places-panel {
+  background: #fffefa;
+  border: 1px solid #e5e7dc;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 4px 16px #455c3405;
+}
+.places-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 550;
+  color: #4d6148;
+}
+.places-header h2 svg {
+  color: #8a9b73;
+}
+.places-header p {
+  color: #939a86;
+  font-size: 11px;
+  margin-top: 8px;
+  line-height: 1.7;
+}
+.map-stage {
+  position: relative;
+  min-height: 260px;
+  border: 1px solid #e1e5d7;
+  border-radius: 13px;
+  overflow: hidden;
+  background: #eef0e4;
+  margin-top: 17px;
+}
+.google-map-canvas {
+  display: none;
+  width: 100%;
+  height: 300px;
+}
+.google-map-canvas.map-visible {
+  display: block;
+}
+.map-placeholder {
+  min-height: 260px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 18px;
+  text-align: center;
+  gap: 13px;
+  background: linear-gradient(145deg, #eff1e4, #f5f1e5);
+}
+.map-placeholder p {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #7f8e70;
+  max-width: 240px;
+}
+.map-placeholder-art {
+  position: relative;
+  width: 100px;
+  height: 70px;
+  border-radius: 18px;
+  background: #dfe8d0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d8e0c9;
+}
+.map-placeholder-art > svg {
+  z-index: 1;
+  color: #71875b;
+  fill: #f6e3bc;
+  filter: drop-shadow(0 2px 2px #54664212);
+}
+.map-road {
+  position: absolute;
+  height: 10px;
+  width: 160px;
+  background: #fffdf0;
+  border-top: 1px solid #e1e5d1;
+  border-bottom: 1px solid #e1e5d1;
+}
+.road-one {
+  transform: rotate(-25deg);
+  top: 16px;
+  left: -20px;
+}
+.road-two {
+  transform: rotate(48deg);
+  left: -50px;
+}
+.road-three {
+  transform: rotate(75deg);
+  right: -85px;
+}
+.map-privacy {
+  font-size: 9px;
+  color: #9aa28d;
+  line-height: 1.5;
+}
+.map-status {
+  font-size: 10px;
+  color: #8a977d;
+  padding: 11px 0 1px;
+  line-height: 1.7;
+}
+.map-error,
+.map-unresolved {
+  font-size: 11px;
+  color: #9a774a;
+  margin-top: 7px;
+  line-height: 1.75;
+}
+.map-status .text-button {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  padding-left: 0;
+}
+.places-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+.places-list > li {
+  display: flex;
+  gap: 5px;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid #efeee6;
+}
+.places-list > li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.place-focus {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  gap: 10px;
+  text-align: left;
+  color: #53664a;
+  background: none;
+  min-height: 44px;
+  border-radius: 8px;
+  align-items: flex-start;
+  padding: 4px 0;
+}
+.place-focus:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.place-focus > span:last-child {
+  min-width: 0;
+}
+.place-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+  border: 1px solid var(--card-border);
+}
+.place-focus strong {
+  display: block;
+  font-size: 11px;
+  line-height: 1.8;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+.place-focus small {
+  display: block;
+  font-size: 10px;
+  line-height: 1.7;
+  color: #9a9e89;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+.places-list > li > a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #849575;
+  width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+  border-radius: 9px;
+}
+.places-list > li > a:hover {
+  background: #eff2e8;
+}
+.map-info {
+  padding: 4px 2px;
+  color: #4d6148;
+  max-width: 230px;
+  font-family: ui-sans-serif, sans-serif;
+}
+.map-info strong {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.map-info p {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #8b957c;
+  margin: 7px 0;
+}
+.map-info a {
+  color: #547745;
+  font-size: 11px;
+}
+.map-loading {
+  padding: 30px;
+  color: #8a977b;
+  font-size: 12px;
+}
+.location-hint {
+  font-size: 10px;
+  line-height: 1.7;
+  color: #969e88;
+  margin: -11px 0 18px;
+}
+.export-banner {
+  display: block;
+  width: 100%;
+  aspect-ratio: 8 / 3;
+  object-fit: cover;
+  border-radius: 14px;
+  margin-bottom: 22px;
+}
+@media (max-width: 900px) {
+  .calendar-layout {
+    display: block;
+  }
+  .map-column {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+  .calendar-view-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 5px;
+    background: #eeefe3;
+    border: 1px solid #e2e5d4;
+    border-radius: 12px;
+    margin: 0 0 25px;
+  }
+  .calendar-view-tabs button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    flex: 1;
+    min-height: 44px;
+    border-radius: 8px;
+    background: transparent;
+    color: #8c977d;
+    font-size: 12px;
+  }
+  .calendar-view-tabs button[aria-selected="true"] {
+    background: #fffefa;
+    color: #536e47;
+    box-shadow: 0 1px 5px #485c3510;
+  }
+  .mobile-view-schedule .map-column,
+  .mobile-view-map .schedule-column {
+    display: none;
+  }
+  .calendar-banner-area {
+    margin-bottom: 23px;
+  }
+}
+@media (max-width: 540px) {
+  .calendar-banner {
+    border-radius: 15px;
+  }
+  .banner-empty {
+    min-height: 130px;
+    padding: 17px;
+    gap: 9px;
+    font-size: 11px;
+  }
+  .banner-controls {
+    bottom: 10px;
+    right: 10px;
+    gap: 5px;
+  }
+  .banner-controls .button {
+    padding: 10px;
+    font-size: 10px;
+  }
+  .places-panel {
+    padding: 16px;
+  }
+  .google-map-canvas {
+    height: 330px;
+  }
+  .map-stage,
+  .map-placeholder {
+    min-height: 270px;
+  }
+}

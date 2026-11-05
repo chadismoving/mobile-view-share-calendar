@@ -80,6 +80,7 @@ describe("calendar lifecycle and durable ordering", () => {
     const content: CalendarContent = {
       title: "A lovely weekend",
       description: "Made for friends",
+      bannerId: null,
       days: [
         {
           id: crypto.randomUUID(),
@@ -178,6 +179,7 @@ describe("calendar lifecycle and durable ordering", () => {
     const content = {
       title: "Plan",
       description: "",
+      bannerId: null,
       days: [
         {
           id: crypto.randomUUID(),
@@ -210,6 +212,7 @@ describe("server validation", () => {
     const content = {
       title: "Plan",
       description: "",
+      bannerId: null,
       days: [
         {
           id: crypto.randomUUID(),

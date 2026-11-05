@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import {
   CalendarDays,
   CheckCheck,
@@ -6,6 +6,8 @@ import {
   Image,
   LoaderCircle,
   LockKeyhole,
+  List,
+  Map as MapIcon,
   Plus,
   Share2,
   WifiOff,
@@ -27,6 +29,10 @@ import { Sheet } from "./Sheet";
 import { ShareSheet } from "./ShareSheet";
 import { ExportSheet } from "./ExportSheet";
 import { useCalendar } from "../lib/use-calendar";
+import { CalendarBanner } from "./CalendarBanner";
+const CalendarMap = lazy(() =>
+  import("./CalendarMap").then((module) => ({ default: module.CalendarMap })),
+);
 
 type Model = ReturnType<typeof useCalendar>;
 function DateSheet({
@@ -102,10 +108,14 @@ function CalendarView({
   content,
   readOnly,
   model,
+  bannerBase,
+  editToken,
 }: {
   content: CalendarContent;
   readOnly: boolean;
   model?: Model;
+  bannerBase: string;
+  editToken?: string;
 }) {
   const [modal, setModal] = useState<"date" | "share" | "export" | null>(null);
   const [selected, setSelected] = useState<{
@@ -115,6 +125,10 @@ function CalendarView({
   const [actionError, setActionError] = useState("");
   const [preparingShare, setPreparingShare] = useState(false);
   const [recoveryDismissed, setRecoveryDismissed] = useState(false);
+  const [mobileView, setMobileView] = useState<"schedule" | "map">("schedule");
+  const bannerSrc = content.bannerId
+    ? `${bannerBase}/${content.bannerId}`
+    : undefined;
   const slots = content.days.reduce((sum, day) => sum + day.slots.length, 0);
   const change = (next: CalendarContent) => model?.change(next);
   const openShare = async () => {
@@ -181,6 +195,14 @@ function CalendarView({
   };
   return (
     <main className="calendar-page">
+      <CalendarBanner
+        src={bannerSrc}
+        title={content.title}
+        editToken={editToken}
+        onChange={(bannerId) =>
+          model?.change((current) => ({ ...current, bannerId }))
+        }
+      />
       <div className="calendar-intro">
         <div className="calendar-title-row">
           <div className="calendar-title-area">
@@ -338,63 +360,126 @@ function CalendarView({
           </div>
         </div>
       )}
-      {content.days.length === 0 ? (
-        <div className="calendar-empty">
-          <div className="empty-illustration">
-            <CalendarDays size={42} strokeWidth={1.3} />
-            <span>✦</span>
-          </div>
-          <h2>
-            {readOnly
-              ? "Good things are on the way."
-              : "A blank page, a lovely beginning."}
-          </h2>
-          <p>
-            {readOnly
-              ? "No dates have been added to this calendar yet."
-              : "Add your first date. The rest of the day is yours to imagine."}
-          </p>
-          {!readOnly && (
-            <button className="button primary" onClick={() => setModal("date")}>
-              <Plus size={18} /> Add your first date
-            </button>
+      <div
+        className="calendar-view-tabs"
+        role="tablist"
+        aria-label="Calendar view"
+        onKeyDown={(event) => {
+          if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key))
+            return;
+          event.preventDefault();
+          const next =
+            event.key === "Home"
+              ? "schedule"
+              : event.key === "End"
+                ? "map"
+                : mobileView === "schedule"
+                  ? "map"
+                  : "schedule";
+          setMobileView(next);
+          document.getElementById(`${next}-tab`)?.focus();
+        }}
+      >
+        <button
+          role="tab"
+          tabIndex={mobileView === "schedule" ? 0 : -1}
+          aria-selected={mobileView === "schedule"}
+          aria-controls="schedule-view"
+          id="schedule-tab"
+          onClick={() => setMobileView("schedule")}
+        >
+          <List size={16} /> Schedule
+        </button>
+        <button
+          role="tab"
+          tabIndex={mobileView === "map" ? 0 : -1}
+          aria-selected={mobileView === "map"}
+          aria-controls="map-view"
+          id="map-tab"
+          onClick={() => setMobileView("map")}
+        >
+          <MapIcon size={16} /> Map
+        </button>
+      </div>
+      <div className={`calendar-layout mobile-view-${mobileView}`}>
+        <div
+          className="schedule-column"
+          id="schedule-view"
+          aria-labelledby="schedule-tab"
+        >
+          {content.days.length === 0 ? (
+            <div className="calendar-empty">
+              <div className="empty-illustration">
+                <CalendarDays size={42} strokeWidth={1.3} />
+                <span>✦</span>
+              </div>
+              <h2>
+                {readOnly
+                  ? "Good things are on the way."
+                  : "A blank page, a lovely beginning."}
+              </h2>
+              <p>
+                {readOnly
+                  ? "No dates have been added to this calendar yet."
+                  : "Add your first date. The rest of the day is yours to imagine."}
+              </p>
+              {!readOnly && (
+                <button
+                  className="button primary"
+                  onClick={() => setModal("date")}
+                >
+                  <Plus size={18} /> Add your first date
+                </button>
+              )}
+            </div>
+          ) : (
+            <Timeline
+              content={content}
+              readOnly={readOnly}
+              onChange={change}
+              onAddSlot={addSlot}
+              onOpenSlot={(slot, dayId) => setSelected({ slot, dayId })}
+              onDeleteDay={(id) => {
+                const day = content.days.find((item) => item.id === id)!;
+                if (
+                  window.confirm(
+                    `Remove ${formatDate(day.date)} and ${day.slots.length ? `all ${day.slots.length} of its time slots` : "its empty date section"}? This cannot be undone.`,
+                  )
+                )
+                  change({
+                    ...content,
+                    days: content.days.filter((item) => item.id !== id),
+                  });
+              }}
+            />
+          )}
+          {!readOnly && content.days.length > 0 && (
+            <div className="add-date-area">
+              <button
+                className="button add-date-button"
+                disabled={content.days.length >= 60}
+                onClick={() => setModal("date")}
+              >
+                <Plus size={18} />{" "}
+                {content.days.length >= 60
+                  ? "60-date limit reached"
+                  : "Add another date"}
+              </button>
+            </div>
           )}
         </div>
-      ) : (
-        <Timeline
-          content={content}
-          readOnly={readOnly}
-          onChange={change}
-          onAddSlot={addSlot}
-          onOpenSlot={(slot, dayId) => setSelected({ slot, dayId })}
-          onDeleteDay={(id) => {
-            const day = content.days.find((item) => item.id === id)!;
-            if (
-              window.confirm(
-                `Remove ${formatDate(day.date)} and ${day.slots.length ? `all ${day.slots.length} of its time slots` : "its empty date section"}? This cannot be undone.`,
-              )
-            )
-              change({
-                ...content,
-                days: content.days.filter((item) => item.id !== id),
-              });
-          }}
-        />
-      )}
-      {!readOnly && content.days.length > 0 && (
-        <div className="add-date-area">
-          <button
-            className="button add-date-button"
-            disabled={content.days.length >= 60}
-            onClick={() => setModal("date")}
+        <aside className="map-column" id="map-view" aria-labelledby="map-tab">
+          <Suspense
+            fallback={
+              <p className="map-loading" role="status">
+                Preparing your places…
+              </p>
+            }
           >
-            <Plus size={18} />{" "}
-            {content.days.length >= 60
-              ? "60-date limit reached"
-              : "Add another date"}
-          </button>
-        </div>
-      )}
+            <CalendarMap content={content} readOnly={readOnly} />
+          </Suspense>
+        </aside>
+      </div>
       {modal === "date" && (
         <DateSheet
           content={content}
@@ -451,7 +536,11 @@ function CalendarView({
         />
       )}
       {modal === "export" && (
-        <ExportSheet content={content} onClose={() => setModal(null)} />
+        <ExportSheet
+          content={content}
+          bannerSrc={bannerSrc}
+          onClose={() => setModal(null)}
+        />
       )}
     </main>
   );
@@ -465,9 +554,27 @@ export function Editor({
 }) {
   const model = useCalendar(initial, token);
   return (
-    <CalendarView content={model.content} readOnly={false} model={model} />
+    <CalendarView
+      content={model.content}
+      readOnly={false}
+      model={model}
+      editToken={token}
+      bannerBase={`/api/edit/${token}/banner`}
+    />
   );
 }
-export function SharedCalendar({ calendar }: { calendar: Calendar }) {
-  return <CalendarView content={contentOf(calendar)} readOnly />;
+export function SharedCalendar({
+  calendar,
+  token,
+}: {
+  calendar: Calendar;
+  token: string;
+}) {
+  return (
+    <CalendarView
+      content={contentOf(calendar)}
+      readOnly
+      bannerBase={`/api/share/${token}/banner`}
+    />
+  );
 }

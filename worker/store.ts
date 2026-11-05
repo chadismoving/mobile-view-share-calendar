@@ -12,6 +12,7 @@ type CalendarRow = {
   id: string;
   title: string;
   description: string;
+  banner_id: string | null;
   revision: number;
   updated_at: string;
   share_token: string;
@@ -41,7 +42,7 @@ export async function getCalendar(
   const result = await db.batch([
     db
       .prepare(
-        `SELECT id, title, description, revision, updated_at, share_token FROM calendars WHERE ${column} = ?`,
+        `SELECT id, title, description, banner_id, revision, updated_at, share_token FROM calendars WHERE ${column} = ?`,
       )
       .bind(key),
     db
@@ -80,6 +81,7 @@ export async function getCalendar(
     id: row.id,
     title: row.title,
     description: row.description,
+    bannerId: row.banner_id,
     revision: row.revision,
     updatedAt: row.updated_at,
     days,
@@ -88,8 +90,9 @@ export async function getCalendar(
   };
 }
 export function publicCalendar(calendar: EditorCalendar): Calendar {
-  const { id, title, description, revision, updatedAt, days } = calendar;
-  return { id, title, description, revision, updatedAt, days };
+  const { id, title, description, bannerId, revision, updatedAt, days } =
+    calendar;
+  return { id, title, description, bannerId, revision, updatedAt, days };
 }
 export async function createCalendar(
   env: Env,
@@ -120,6 +123,7 @@ export async function createCalendar(
       title,
       description,
       days: [],
+      bannerId: null,
       revision: 1,
       updatedAt: now,
       shareToken,
@@ -141,9 +145,17 @@ export async function saveCalendar(
   const results = await db.batch([
     db
       .prepare(
-        "UPDATE calendars SET title = ?, description = ?, revision = revision + 1, mutation_id = ?, updated_at = ? WHERE id = ? AND revision = ?",
+        "UPDATE calendars SET title = ?, description = ?, banner_id = ?, revision = revision + 1, mutation_id = ?, updated_at = ? WHERE id = ? AND revision = ?",
       )
-      .bind(content.title, content.description, nonce, now, id, revision),
+      .bind(
+        content.title,
+        content.description,
+        content.bannerId,
+        nonce,
+        now,
+        id,
+        revision,
+      ),
     db
       .prepare(
         "DELETE FROM calendar_days WHERE calendar_id = ? AND EXISTS (SELECT 1 FROM calendars WHERE id = ? AND mutation_id = ?)",

@@ -113,7 +113,7 @@ export default function App() {
           token={currentRoute.token}
         />
       ) : calendar && currentRoute.type === "share" ? (
-        <SharedCalendar calendar={calendar} />
+        <SharedCalendar calendar={calendar} token={currentRoute.token} />
       ) : (
         <main className="page-message" role="status">
           <LoaderCircle size={30} className="spin" />

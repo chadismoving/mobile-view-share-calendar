@@ -52,3 +52,11 @@ Gitleaks scanned the staged source with redacted output and reported no leaks. T
 The owner confirmed the public repository name `chadismoving/mobile-view-share-calendar` and authorized D1/GitHub provisioning. Created the public repository and APAC production D1 database `mobile-share-calendar`, then applied both versioned migrations. Configured GitHub's production Environment and non-secret account/database/domain variables. `PRODUCTION_DEPLOY_ENABLED=false` holds Worker deployment while the owner sets up Access; the local Wrangler OAuth token was not uploaded to GitHub. No Worker, DNS, Access policy, or local calendar-data import was performed.
 
 Added a database-only configuration generator so schema operations do not require Access values, and manual CI dispatch for the future gated release. Source publication and hosted CI status are verified through GitHub Actions; use the linked run results for current status.
+
+## Map and banner feature · 5 November 2026
+
+Added uploaded/cropped/replaced/removed calendar banners, public-banner authorization and share-link revocation, the optional Google Maps integration, numbered deduplicated locations, a desktop places sidebar, and phone Schedule/Map tabs. Preserved the existing pastel theme. Migration `0003_calendar_banners.sql` was applied to local D1 only.
+
+Typecheck and lint passed without warnings, all eight focused tests passed, and the frontend production build and Worker dry run passed. New tests cover image validation, upload/ownership boundaries, banner persistence, stale-save protection, public-image revocation, normalized location grouping, and optional map configuration. Browser checks verified upload/crop, replacement, refresh persistence, public sharing, and PNG export with the banner. Both mobile views had no horizontal overflow at 320, 375, or 430 px.
+
+Google's SDK was exercised with a local browser key, but the Google service rejected localhost with `RefererNotAllowedMapError`; live marker placement is not verified. The UI reports failure and retains the full list and direct Google Maps links. No map coordinates are persisted. A synthetic landscape was used as a local-only banner preview, with a small synthetic JPEG fixture in tests; no third-party reference image was copied into the product.

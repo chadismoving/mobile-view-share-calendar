@@ -58,3 +58,7 @@ After the first Worker deployment:
 - Verify both certificates, the deployed commit, and GitHub's deployment record.
 
 The production database starts empty. Local edit/share URLs address local D1 data and do not automatically become production URLs. For later schema changes, take a secure D1 backup and review compatibility before migration. See README for database backups, Time Travel, and code rollback.
+
+## Map/banner update
+
+Before deploying the map/banner version, back up production D1 and apply `0003_calendar_banners.sql` with `npm run db:production`. This migration has been applied to local D1 only during feature verification; the previously provisioned production schema has not been changed for this update. Set the optional production Environment secret `GOOGLE_MAPS_BROWSER_KEY` and repository variable `GOOGLE_MAPS_MAP_ID` as described in README. The local key observed during verification currently rejects localhost with `RefererNotAllowedMapError`; allow the development referrers or verify on the configured production hosts before calling live pins tested. Worker deployment remains controlled by the existing Access prerequisite and deployment gate.

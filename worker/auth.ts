@@ -99,7 +99,10 @@ export function newToken() {
     .replaceAll("=", "");
 }
 export const validToken = (value: string) => /^[A-Za-z0-9_-]{43}$/.test(value);
-export function requireSameOrigin(request: Request) {
+export function requireSameOrigin(
+  request: Request,
+  contentType = "application/json",
+) {
   const origin = request.headers.get("Origin");
   if (
     !origin ||
@@ -110,11 +113,8 @@ export function requireSameOrigin(request: Request) {
   }
   if (
     request.method !== "DELETE" &&
-    !request.headers
-      .get("Content-Type")
-      ?.toLowerCase()
-      .startsWith("application/json")
+    !request.headers.get("Content-Type")?.toLowerCase().startsWith(contentType)
   ) {
-    throw new HttpError(415, "Send application/json.");
+    throw new HttpError(415, `Send ${contentType}.`);
   }
 }

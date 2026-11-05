@@ -191,9 +191,12 @@ export function SlotSheet({
             maxLength={200}
             value={draft.location}
             onChange={(event) => field("location", event.target.value)}
-            placeholder="A place or meeting point"
+            placeholder="Place name and street address"
           />
         </label>
+        <p className="location-hint">
+          Use a full address so this stop can be pinned on your calendar’s map.
+        </p>
         <label className="field">
           Link <span className="optional">optional</span>
           <input
