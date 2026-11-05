@@ -6,9 +6,11 @@ import { Sheet } from "./Sheet";
 
 export function ExportSheet({
   content,
+  bannerSrc,
   onClose,
 }: {
   content: CalendarContent;
+  bannerSrc?: string;
   onClose: () => void;
 }) {
   const [images, setImages] = useState<ExportedImage[]>([]);
@@ -21,9 +23,13 @@ export function ExportSheet({
     let active = true;
     if (!job.current)
       job.current = import("../lib/export-image").then((module) =>
-        module.exportImages(snapshot.current, (value) => {
-          if (active) setProgress(value);
-        }),
+        module.exportImages(
+          snapshot.current,
+          (value) => {
+            if (active) setProgress(value);
+          },
+          bannerSrc,
+        ),
       );
     const currentJob = job.current;
     void currentJob
@@ -49,7 +55,7 @@ export function ExportSheet({
         })
         .catch(() => undefined);
     };
-  }, [attempt]);
+  }, [attempt, bannerSrc]);
   const canShare =
     images.length > 0 &&
     typeof navigator.canShare === "function" &&

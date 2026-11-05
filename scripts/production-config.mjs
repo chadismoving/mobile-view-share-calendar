@@ -64,6 +64,9 @@ config.vars = {
       .map((key) => [key, settings[key]]),
   ),
 };
+for (const key of ["GOOGLE_MAPS_BROWSER_KEY", "GOOGLE_MAPS_MAP_ID"]) {
+  if (settings[key]?.trim()) config.vars[key] = settings[key].trim();
+}
 config.d1_databases[0].database_id = settings.D1_DATABASE_ID;
 delete config.env;
 // Access and DNS are configured externally before first deploy. These exact

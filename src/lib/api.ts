@@ -12,15 +12,15 @@ export async function api<T>(
   options: RequestInit = {},
 ): Promise<T> {
   let response: Response;
+  const headers = new Headers(options.headers);
+  if (typeof options.body === "string" && !headers.has("Content-Type"))
+    headers.set("Content-Type", "application/json");
   try {
     response = await fetch(path, {
       ...options,
       credentials: "same-origin",
       cache: "no-store",
-      headers: {
-        ...options.headers,
-        ...(options.body ? { "Content-Type": "application/json" } : {}),
-      },
+      headers,
     });
   } catch {
     throw new ApiError(

@@ -142,6 +142,7 @@ export const contentSchema = z
   .object({
     title: z.string().trim().min(1, "Give your calendar a title.").max(120),
     description: z.string().trim().max(1000),
+    bannerId: z.string().uuid().nullable().default(null),
     days: z.array(daySchema).max(60),
   })
   .strict()
@@ -190,8 +191,14 @@ export type EditorCalendar = Calendar & {
 export const contentOf = ({
   title,
   description,
+  bannerId,
   days,
-}: CalendarContent): CalendarContent => ({ title, description, days });
+}: CalendarContent): CalendarContent => ({
+  title,
+  description,
+  bannerId: bannerId ?? null,
+  days,
+});
 export const byTime = (a: Slot, b: Slot) =>
   a.startTime.localeCompare(b.startTime) || a.endTime.localeCompare(b.endTime);
 export function moveSlot(

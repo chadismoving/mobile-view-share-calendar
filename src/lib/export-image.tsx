@@ -22,15 +22,24 @@ function ExportLayout({
   segments,
   page = 1,
   total = 1,
+  bannerSrc,
 }: {
   content: CalendarContent;
   segments: Segment[];
   page?: number;
   total?: number;
+  bannerSrc?: string;
 }) {
   return (
     <div className="export-page">
       <header className="export-header">
+        {bannerSrc && (
+          <img
+            className="export-banner"
+            src={bannerSrc}
+            alt={`${content.title} banner`}
+          />
+        )}
         <h1>{content.title}</h1>
         {content.description && <p>{content.description}</p>}
       </header>
@@ -96,6 +105,7 @@ function ExportLayout({
 export async function exportImages(
   content: CalendarContent,
   onProgress: (value: string) => void,
+  bannerSrc?: string,
 ): Promise<ExportedImage[]> {
   await document.fonts.ready;
   const host = document.createElement("div");
@@ -111,9 +121,24 @@ export async function exportImages(
       continued: false,
     }));
     flushSync(() =>
-      root.render(<ExportLayout content={content} segments={initial} />),
+      root.render(
+        <ExportLayout
+          content={content}
+          segments={initial}
+          bannerSrc={bannerSrc}
+        />,
+      ),
     );
     await frame();
+    if (bannerSrc) {
+      const image = host.querySelector<HTMLImageElement>(".export-banner");
+      if (image)
+        await image.decode().catch(() => {
+          throw new Error(
+            "The banner could not load. Reconnect and try exporting again.",
+          );
+        });
+    }
     const page = host.querySelector<HTMLElement>(".export-page")!;
     const header =
       page.querySelector<HTMLElement>(".export-header")!.offsetHeight;
@@ -181,10 +206,13 @@ export async function exportImages(
             segments={pages[index]}
             page={index + 1}
             total={pages.length}
+            bannerSrc={bannerSrc}
           />,
         ),
       );
       await frame();
+      const banner = host.querySelector<HTMLImageElement>(".export-banner");
+      if (banner) await banner.decode();
       const node = host.querySelector<HTMLElement>(".export-page")!;
       if (node.offsetHeight > MAX_HEIGHT + 100)
         throw new Error(

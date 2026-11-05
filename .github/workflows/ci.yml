@@ -54,6 +54,8 @@ jobs:
       PUBLIC_SHARE_ORIGIN: ${{ vars.PUBLIC_SHARE_ORIGIN }}
       ACCESS_TEAM_DOMAIN: ${{ vars.ACCESS_TEAM_DOMAIN }}
       ACCESS_AUD: ${{ vars.ACCESS_AUD }}
+      GOOGLE_MAPS_BROWSER_KEY: ${{ secrets.GOOGLE_MAPS_BROWSER_KEY }}
+      GOOGLE_MAPS_MAP_ID: ${{ vars.GOOGLE_MAPS_MAP_ID }}
     steps:
       - uses: actions/checkout@v6
         with:
