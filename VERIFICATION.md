@@ -72,3 +72,9 @@ The supplied Maps key is deployed and saved as a GitHub production Environment s
 Added self-hosted Noto Sans TC for the interface and activity content, and Noto Serif TC for the calendar title. Medium activity headings and slightly looser title spacing retain the existing theme. PNG export now embeds only the font subsets used by each page and waits for font loading before pagination.
 
 Typecheck, lint, and the production frontend build passed. A disposable local calendar with mixed Traditional Chinese and English verified the computed font families, the narrow 320 px layout without horizontal overflow, and a visually inspected 780 px PNG containing the serif title, sans activity content, punctuation, and themed icons. No user calendars or production data were changed for this preview. Live share-host testing remains deferred at the owner's request.
+
+## Map lookup error diagnosis · 5 November 2026
+
+At the owner's request, reproduced the reported pin failure on the live shared calendar in their authenticated Safari session. Both Google GeocodeService responses returned `REQUEST_DENIED` with an explicit instruction to enable billing on the Google Cloud project. The base map loaded. No calendar data or billing settings were changed.
+
+Corrected the UI's catch-all address warning: genuine zero results, billing/permission/quota/network failures, and marker-rendering failures are now distinct. Project-wide denial/limit failures stop subsequent lookup batches; successfully pinned locations remain selectable after partial failures. A focused regression test covers the observed billing denial and other failure classes. Live marker placement remains blocked by Google billing until the owner enables it.
