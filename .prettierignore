@@ -1,0 +1,8 @@
+node_modules
+dist
+.wrangler
+.worker-build
+package-lock.json
+codex_mobile_calendar_spec.md
+.wrangler.production.json
+.wrangler.d1.json

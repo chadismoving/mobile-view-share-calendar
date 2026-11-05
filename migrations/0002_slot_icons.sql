@@ -1,0 +1,1 @@
+ALTER TABLE time_slots ADD COLUMN icon TEXT NOT NULL DEFAULT '';
