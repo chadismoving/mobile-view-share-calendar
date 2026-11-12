@@ -34,12 +34,12 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@cloudflare/vitest-plugin": "^1.5.1",
-    "@cloudflare/workers-types": "^5.20261104.1",
+    "@cloudflare/vitest-plugin": "^1.6.0",
+    "@cloudflare/workers-types": "^5.20261109.1",
     "@eslint/js": "^10.0.1",
-    "@tailwindcss/vite": "^4.3.4",
-    "@types/google.maps": "^3.66.9",
-    "@types/node": "^24.19.2",
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/google.maps": "^3.66.10",
+    "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.2.1",
@@ -49,10 +49,10 @@
     "globals": "^17.14.0",
     "prettier": "^3.9.10",
     "tailwindcss": "^4.3.4",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "typescript-eslint": "^8.72.1",
-    "vite": "^8.3.5",
-    "vitest": "^4.1.12",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0",
     "wrangler": "^4.157.0"
   },
   "overrides": {
